@@ -1,25 +1,23 @@
 pipeline {
     agent any
-
     stages {
         stage('Checkout') {
             steps {
-                // Clones the repository
-                git branch: 'main', url: 'https://github.com/yourusername/your-repo.git'
+                git 'https://github.com/skeerthi66/new.git'
             }
         }
-
-        stage('Setup') {
+        stage('Get Changed Files') {
             steps {
-                // Make the script executable
-                sh 'chmod +x distribute_cookbook.sh'
+                sh 'git diff-tree --no-commit-id --name-only -r $GIT_COMMIT > changed_files.txt'
             }
         }
-
-        stage('Distribute Cookbook') {
+        stage('Deploy with Chef') {
             steps {
-                // Execute the distribution script
-                sh './distribute_cookbook.sh'
+                sh '''
+                while read file; do
+                  chef-client --local-mode --runlist "recipe[my_cookbook::${file}]"
+                done < changed_files.txt
+                '''
             }
         }
     }
