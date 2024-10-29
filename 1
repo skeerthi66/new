@@ -1,0 +1,26 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Checkout') {
+            steps {
+                // Clones the repository
+                git branch: 'main', url: 'https://github.com/yourusername/your-repo.git'
+            }
+        }
+
+        stage('Setup') {
+            steps {
+                // Make the script executable
+                sh 'chmod +x distribute_cookbook.sh'
+            }
+        }
+
+        stage('Distribute Cookbook') {
+            steps {
+                // Execute the distribution script
+                sh './distribute_cookbook.sh'
+            }
+        }
+    }
+}
