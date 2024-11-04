@@ -8,16 +8,24 @@ pipeline {
         }
         stage('Get Changed Files') {
             steps {
-                sh 'git diff-tree --no-commit-id --name-only -r $GIT_COMMIT > changed_files.txt'
+                script {
+                    // Capture changed files in the latest commit
+                    sh 'git diff-tree --no-commit-id --name-only -r $GIT_COMMIT > changed_files.txt'
+                }
             }
         }
         stage('Deploy with Chef') {
             steps {
-                sh '''
-                while read file; do
-                  chef-client --local-mode --runlist "recipe[my_cookbook::${file}]"
-                done < changed_files.txt
-                '''
+                script {
+                    // Read changed files and apply Chef recipes accordingly
+                    sh '''
+                    while read file; do
+                      # Extract the recipe name from the changed file path, assuming it matches cookbook structure
+                      recipe_name=$(basename "$file" .rb)
+                      chef-client --local-mode --runlist "recipe[my_cookbook::${recipe_name}]"
+                    done < changed_files.txt
+                    '''
+                }
             }
         }
     }
