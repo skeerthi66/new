@@ -1,0 +1,5 @@
+stage('Clone Job Templates') {
+    steps {
+        git 'https://github.com/skeerthi66/courier-job-templates.git'
+    }
+}
