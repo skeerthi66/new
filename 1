@@ -1,23 +1,49 @@
 pipeline {
     agent any
+    environment {
+        // Set the path to the chef-client binary. Adjust the path as needed.
+        CHEF_CLIENT_PATH = '/opt/chef-workstation/bin/chef-client'
+    }
     stages {
         stage('Checkout') {
             steps {
+                // Checkout the repository
                 git 'https://github.com/skeerthi66/new.git'
+            }
+        }
+        stage('Get Changed Files') {
+            steps {
+                script {
+                    // Capture the list of changed files in the latest commit
+                    sh 'git diff-tree --no-commit-id --name-only -r $GIT_COMMIT > changed_files.txt'
+                }
             }
         }
         stage('Deploy with Chef') {
             steps {
                 script {
-                    // Execute Chef with the full path
+                    // Use the chef-client to run recipes based on the changed files
                     sh '''
                     while read file; do
+                      # Extract the recipe name from the changed file path
                       recipe_name=$(basename "$file" .rb)
-                      /opt/chef-workstation/bin/chef-client --local-mode --runlist "recipe[my_cookbook::${recipe_name}]"
+                      echo "Running recipe: my_cookbook::$recipe_name"
+                      ${CHEF_CLIENT_PATH} --local-mode --runlist "recipe[my_cookbook::${recipe_name}]"
                     done < changed_files.txt
                     '''
                 }
             }
+        }
+    }
+    post {
+        always {
+            echo 'Build completed.'
+        }
+        failure {
+            echo 'Build failed.'
+        }
+        success {
+            echo 'Build succeeded.'
         }
     }
 }
