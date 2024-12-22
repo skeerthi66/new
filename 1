@@ -6,34 +6,14 @@ pipeline {
                 git 'https://github.com/skeerthi66/new.git'
             }
         }
-        stage('Get Changed Files') {
-            steps {
-                script {
-                    // Capture changed files in the latest commit
-                    sh 'git diff-tree --no-commit-id --name-only -r ${env.GIT_COMMIT} > changed_files.txt'
-                }
-            }
-        }
         stage('Deploy with Chef') {
             steps {
                 script {
-                    // Read changed files and apply Chef recipes
+                    // Execute Chef with the full path
                     sh '''
-                    CHEF_CLIENT="/opt/chef-workstation/embedded/bin/chef-client"
-                    if [ ! -x "$CHEF_CLIENT" ]; then
-                        echo "Chef Client not found or not executable!"
-                        exit 1
-                    fi
-
                     while read file; do
-                      # Only process `.rb` files (assuming recipes are in Ruby format)
-                      if [[ "$file" == *.rb ]]; then
-                          recipe_name=$(basename "$file" .rb)
-                          echo "Deploying with Chef recipe: $recipe_name"
-                          $CHEF_CLIENT --local-mode --runlist "recipe[my_cookbook::${recipe_name}]"
-                      else
-                          echo "Skipping non-Ruby file: $file"
-                      fi
+                      recipe_name=$(basename "$file" .rb)
+                      /opt/chef-workstation/bin/chef-client --local-mode --runlist "recipe[my_cookbook::${recipe_name}]"
                     done < changed_files.txt
                     '''
                 }
