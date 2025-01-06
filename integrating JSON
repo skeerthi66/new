@@ -1,1 +1,24 @@
-
+pipeline { 
+    agent any 
+    stages { 
+        stage('Pull Code from GitHub') { 
+            steps { 
+                git branch: 'main', url: 'https://github.com/your-org/your-repo.git' 
+            } 
+        } 
+        stage('Validate and Push Job to Courier') { 
+            steps { 
+                script { 
+                    def jobFile = readFile('courier-jobs/update_configuration.json').trim() 
+                    withCredentials([string(credentialsId: 'courier_api_token', variable: 'COURIER_API_KEY')]) { 
+                        sh """ 
+                        curl -X POST -H "Authorization: Bearer $COURIER_API_KEY" \ 
+                        -H "Content-Type: application/json" -d @$jobFile \ 
+                        https://your-courier-api-url/scheduler/jobs 
+                        """ 
+                    } 
+                } 
+            } 
+        } 
+    } 
+} 
