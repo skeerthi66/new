@@ -1,0 +1,53 @@
+pipeline {
+    agent any
+    environment {
+        COURIER_CLI = '/opt/chef-workstation/bin/chef' // Update this with your CLI path
+        GITHUB_REPO = 'https://github.com/your-org/your-repo.git' // Replace with your repository
+        COURIER_SERVER_URL = 'https://courier.example.com' // Chef Courier server URL
+        COURIER_API_TOKEN = credentials('courier_api_token') // Jenkins credential for the API token
+    }
+    stages {
+        stage('Clone Repository') {
+            steps {
+                git branch: 'main', url: env.GITHUB_REPO
+            }
+        }
+        stage('Authenticate with Chef Courier') {
+            steps {
+                script {
+                    sh """
+                    ${env.COURIER_CLI} login --server-url ${env.COURIER_SERVER_URL} --token ${env.COURIER_API_TOKEN}
+                    """
+                }
+                echo "Authenticated with Chef Courier server successfully."
+            }
+        }
+        stage('Detect JSON File') {
+            steps {
+                script {
+                    def jsonFiles = findFiles(glob: '**/*.json')
+                    if (jsonFiles.size() == 0) {
+                        error "No JSON files detected!"
+                    } else {
+                        echo "Found JSON files: ${jsonFiles*.name}"
+                    }
+                }
+            }
+        }
+        stage('Process JSON with Chef Courier') {
+            steps {
+                script {
+                    def jsonFilePath = findFiles(glob: '**/*.json')[0].path
+                    sh """
+                    ${env.COURIER_CLI} courier job create --file ${jsonFilePath}
+                    """
+                }
+            }
+        }
+        stage('Verification') {
+            steps {
+                echo "Job created successfully. Verify in Chef Courier UI."
+            }
+        }
+    }
+}
