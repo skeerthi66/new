@@ -1,0 +1,69 @@
+{
+  "name": "Simple job for test",
+  "description": "testing",
+  "scheduleRule": "immediate",
+  "exceptionRules": [],
+  "target": {
+    "executionType": "sequential",
+    "groups": [
+      {
+        "timeoutSeconds": 120,
+        "batchSize": {},
+        "distributionMethod": "batching",
+        "successCriteria": [
+          {
+            "numRuns": {
+              "type": "percent",
+              "value": 100
+            },
+            "status": "success"
+          }
+        ],
+        "nodeListType": "nodes",
+        "nodeIdentifiers": [
+          "60bf7553-dacb-41ea-a730-5baf0322257a"
+        ]
+      }
+    ]
+  },
+  "actions": {
+    "accessMode": "agent",
+    "steps": [
+      {
+        "name": "name",
+        "interpreter": {
+          "skill": {
+            "minVersion": "1.0.0"
+          },
+          "name": "chef-platform/shell-interpreter"
+        },
+        "command": {
+          "linux": [
+            "sleep 10"
+          ],
+          "windows": [
+            "sleep 10"
+          ]
+        },
+        "inputs": {},
+        "expectedInputs": {},
+        "outputFieldRules": {},
+        "retryCount": 2,
+        "failureBehavior": {
+          "action": "retryThenFail",
+          "retryBackoffStrategy": {
+            "type": "none",
+            "delaySeconds": 1,
+            "arguments": [
+              1,
+              3,
+              5
+            ]
+          }
+        },
+        "limits": {},
+        "conditions": []
+      }
+    ]
+  }
+}
